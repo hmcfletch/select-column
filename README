@@ -1,0 +1,64 @@
+= Select Column
+
+== Description
+
+Select a single column from a table by passing ActiveRecord object creation.
+
+== Summary
+
+Many times when we are selecting a rows out of the database we just want a single column and have no need for the entire object.  There are a number of ways to accomplish this with ActiveRecord.  One can get all the records from the database and then collect the attribute needed:
+
+    Posts.where(:status => 'published').collect(&:id)
+    => [ 1, 5, 8, 10 ]
+
+This has the benefit of being able to us any overwritten accessors, but has a lot of overhead associated with generating the objects.  Another way to do it is to go directly to the database:
+
+    ActiveRecord::Base.connection.select_values("SELECT id FROM posts WHERE status = 'published'")
+    => [ 1, 5, 8, 10 ]
+
+This is much faster, but requires one to use the direct connection to the database and have the SQL literal prepared.  Not particularly user friendly even if you can get the SQL literal using the to_sql:
+
+  ActiveRecord::Base.connection.select_values(Posts.where(:status => 'published').select(:id).to_sql)
+  => [ 1, 5, 8, 10 ]
+
+Wouldn't it be nicer if you could just do the following:
+
+  Post.where(:status => 'published').select_column(:id)
+  => [ 1, 5, 8, 10 ]
+
+== Usage
+
+select_column accepts a single optional argument.  This is the column that you want to have returned in an array.  The returned column can also be specified using the select query method.
+
+If neither a select nor an argument is given, :id is assumed to be the column to be returned.  If multiple select query methods are present, the first one defined will be the column returned.
+
+Some examples:
+
+  Post.select_column
+  Post.select_column(:id)
+  Post.where(:status => 'published').select_column
+  Post.where(:status => 'published').select_column(:id)
+  Post.select(:id).where(:status => 'published').select_column
+
+== License
+
+Copyright (c) 2011 Les Fletcher
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
